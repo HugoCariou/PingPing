@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { sendNotification } from '../lib/notifications';
 import type { 
   Couple, 
   Profile, 
@@ -53,6 +54,8 @@ interface AppState {
     category?: string;
     priceEstimate?: number;
     url?: string;
+    imageUrl?: string;
+    dueDate?: string;
   }) => void;
   toggleItem: (itemId: string) => void;
   deleteItem: (itemId: string) => void;
@@ -125,16 +128,20 @@ export const useAppStore = create<AppState>()(
           items: state.items.filter((item) => item.list_id !== listId),
         })),
 
-      addItem: ({ listId, title, details, category, priceEstimate, url }) => {
-        const { currentUserId } = get();
+      addItem: ({ listId, title, details, category, priceEstimate, url, imageUrl, dueDate }) => {
+        const { currentUserId, lists } = get();
+        const targetList = lists.find((l) => l.id === listId);
+
         const newItem: ListItem = {
           id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           list_id: listId,
           title: title.trim(),
           details: details?.trim() || undefined,
-          category: category || 'Autre',
+          category: category?.trim() || undefined,
           price_estimate: priceEstimate,
           url: url?.trim() || undefined,
+          image_url: imageUrl,
+          due_date: dueDate,
           status: 'pending',
           is_completed: false,
           created_by: currentUserId,
@@ -144,6 +151,11 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           items: [newItem, ...state.items],
         }));
+
+        // Notification pour courses ou tâches
+        if (targetList?.type === 'groceries') {
+          sendNotification('Courses', `Ajouté : ${title.trim()}`);
+        }
       },
 
       toggleItem: (itemId) => {

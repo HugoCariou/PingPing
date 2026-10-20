@@ -19,7 +19,14 @@ const CATEGORIES: GroceryCategory[] = [
   'Autre',
 ];
 
-const QUICK_ITEMS = ['Pain', 'Lait', 'Oeufs', 'Avocats', 'Pâtes', 'Café'];
+const QUICK_ITEMS: { name: string; cat?: GroceryCategory }[] = [
+  { name: 'Pain', cat: 'Boulangerie' },
+  { name: 'Lait', cat: 'Boissons' },
+  { name: 'Oeufs', cat: 'Frais & Crémerie' },
+  { name: 'Avocats', cat: 'Fruits & Légumes' },
+  { name: 'Pâtes', cat: 'Épicerie' },
+  { name: 'Café', cat: 'Épicerie' },
+];
 
 export const GroceriesView: React.FC = () => {
   const {
@@ -33,7 +40,6 @@ export const GroceriesView: React.FC = () => {
   } = useAppStore();
 
   const [inputTitle, setInputTitle] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<GroceryCategory>('Fruits & Légumes');
   const [filterCategory, setFilterCategory] = useState<string>('Toutes');
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -59,26 +65,26 @@ export const GroceriesView: React.FC = () => {
     if (e) e.preventDefault();
     if (!inputTitle.trim()) return;
 
+    // Ajout manuel : AUCUNE catégorie ajoutée automatiquement
     addItem({
       listId: groceryList!.id,
       title: inputTitle.trim(),
-      category: selectedCategory,
     });
 
     setInputTitle('');
   };
 
-  const handleQuickAdd = (name: string) => {
+  const handleQuickAdd = (item: { name: string; cat?: GroceryCategory }) => {
     addItem({
       listId: groceryList!.id,
-      title: name,
-      category: selectedCategory,
+      title: item.name,
+      category: item.cat,
     });
   };
 
   return (
-    <div className="pb-safe-nav pt-5 px-4 max-w-md mx-auto space-y-6">
-      {/* En-tête aéré */}
+    <div className="pb-safe-nav pt-5 px-4 max-w-md mx-auto space-y-5">
+      {/* En-tête sobre et aéré */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-base font-semibold tracking-tight text-zinc-100">
@@ -93,7 +99,7 @@ export const GroceriesView: React.FC = () => {
         </Badge>
       </div>
 
-      {/* Zone de saisie principale */}
+      {/* Saisie rapide avec grande aération */}
       <div className="space-y-3">
         <form onSubmit={handleAdd} className="flex gap-2">
           <Input
@@ -108,82 +114,63 @@ export const GroceriesView: React.FC = () => {
           </Button>
         </form>
 
-        {/* Suggestions rapides aérées */}
+        {/* Suggestions rapides en 1 clic */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           <span className="text-[11px] text-zinc-400 shrink-0 mr-1">Rapide :</span>
-          {QUICK_ITEMS.map((name) => (
+          {QUICK_ITEMS.map((item) => (
             <button
-              key={name}
+              key={item.name}
               type="button"
-              onClick={() => handleQuickAdd(name)}
+              onClick={() => handleQuickAdd(item)}
               className="text-[11px] bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800/80 px-2.5 py-1 rounded-md shrink-0 cursor-pointer transition-colors"
             >
-              + {name}
+              + {item.name}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Filtres par rayon bien espacés */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-zinc-400">Rayon</span>
-          {filterCategory !== 'Toutes' && (
-            <button
-              onClick={() => setFilterCategory('Toutes')}
-              className="text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer"
-            >
-              Réinitialiser
-            </button>
+      {/* Filtres par rayon (affichés seulement si des articles catégorisés existent) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar">
+        <button
+          onClick={() => setFilterCategory('Toutes')}
+          className={cn(
+            'text-xs px-3 py-1.5 rounded-md shrink-0 cursor-pointer transition-colors',
+            filterCategory === 'Toutes'
+              ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700'
+              : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900/40 border border-transparent'
           )}
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar">
-          <button
-            onClick={() => setFilterCategory('Toutes')}
-            className={cn(
-              'text-xs px-3 py-1.5 rounded-md shrink-0 cursor-pointer transition-colors',
-              filterCategory === 'Toutes'
-                ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700'
-                : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900/40 border border-transparent'
-            )}
-          >
-            Tous ({pendingItems.length})
-          </button>
-          {CATEGORIES.map((cat) => {
-            const count = pendingItems.filter((i) => i.category === cat).length;
-            const isSelected = filterCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => {
-                  setFilterCategory(cat);
-                  setSelectedCategory(cat);
-                }}
-                className={cn(
-                  'text-xs px-3 py-1.5 rounded-md shrink-0 cursor-pointer transition-colors flex items-center gap-1.5',
-                  isSelected
-                    ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700'
-                    : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900/40 border border-transparent'
-                )}
-              >
-                <span>{cat}</span>
-                {count > 0 && (
-                  <span className="text-[10px] text-zinc-400">({count})</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        >
+          Tous ({pendingItems.length})
+        </button>
+        {CATEGORIES.map((cat) => {
+          const count = pendingItems.filter((i) => i.category === cat).length;
+          if (count === 0 && filterCategory !== cat) return null;
+          return (
+            <button
+              key={cat}
+              onClick={() => setFilterCategory(cat)}
+              className={cn(
+                'text-xs px-3 py-1.5 rounded-md shrink-0 cursor-pointer transition-colors flex items-center gap-1.5',
+                filterCategory === cat
+                  ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700'
+                  : 'text-zinc-400 hover:text-zinc-200 bg-zinc-900/40 border border-transparent'
+              )}
+            >
+              <span>{cat}</span>
+              {count > 0 && <span className="text-[10px] text-zinc-400">({count})</span>}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Liste des articles à prendre (aérée et confortable) */}
+      {/* Liste des articles à acheter */}
       <div className="space-y-2.5">
         {displayedPending.length === 0 ? (
           <div className="text-center py-10 rounded-xl border border-dashed border-zinc-850 p-6 text-zinc-400 text-xs">
             {pendingItems.length === 0
-              ? 'Aucun article à acheter pour le moment.'
-              : 'Aucun article dans ce rayon.'}
+              ? 'Aucun article à acheter.'
+              : 'Aucun article dans cette catégorie.'}
           </div>
         ) : (
           displayedPending.map((item) => (
@@ -202,7 +189,7 @@ export const GroceriesView: React.FC = () => {
                   <span className="text-sm font-medium text-zinc-200 block truncate">
                     {item.title}
                   </span>
-                  {item.category && item.category !== 'Autre' && (
+                  {item.category && (
                     <span className="text-[11px] text-zinc-400 block mt-0.5">
                       {item.category}
                     </span>
@@ -222,7 +209,7 @@ export const GroceriesView: React.FC = () => {
         )}
       </div>
 
-      {/* Section "Dans le panier" repliable et espacée */}
+      {/* Panier */}
       {completedItems.length > 0 && (
         <div className="pt-4 border-t border-zinc-850 space-y-3">
           <div className="flex items-center justify-between text-xs text-zinc-400">

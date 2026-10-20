@@ -36,6 +36,8 @@ export interface ListItem {
   category?: GroceryCategory | string;
   price_estimate?: number;
   url?: string;
+  image_url?: string;
+  due_date?: string;
   status?: GiftStatus;
   is_completed: boolean;
   completed_by?: string;

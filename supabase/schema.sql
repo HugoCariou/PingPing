@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS public.list_items (
   category TEXT DEFAULT 'Autre',
   price_estimate NUMERIC(10, 2),
   url TEXT,
+  image_url TEXT,
+  due_date DATE,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'ordered', 'wrapped')),
   is_completed BOOLEAN NOT NULL DEFAULT FALSE,
   completed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
