@@ -22,6 +22,7 @@ export const GiftsView: React.FC = () => {
     getCurrentProfile,
     getPartnerProfile,
     createList,
+    deleteList,
     addItem,
     deleteItem,
     updateGiftStatus,
@@ -39,6 +40,7 @@ export const GiftsView: React.FC = () => {
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
   const [activeGiftListId, setActiveGiftListId] = useState<string | null>(null);
+  const [confirmDeleteListId, setConfirmDeleteListId] = useState<string | null>(null);
 
   const [giftTitle, setGiftTitle] = useState('');
   const [giftDetails, setGiftDetails] = useState('');
@@ -79,6 +81,13 @@ export const GiftsView: React.FC = () => {
     } catch (err) {
       console.error('Erreur compression image', err);
     }
+  };
+
+  const handleDeleteList = (listId: string) => {
+    const remaining = secretLists.filter((l) => l.id !== listId);
+    deleteList(listId);
+    setActiveGiftListId(remaining[0]?.id || null);
+    setConfirmDeleteListId(null);
   };
 
   const handleCreateList = (e: React.FormEvent) => {
@@ -243,13 +252,45 @@ export const GiftsView: React.FC = () => {
         <div className="space-y-3">
           <div className="flex justify-between items-center text-xs text-zinc-400">
             <span>{currentItems.length} article{currentItems.length > 1 ? 's' : ''}</span>
-            <Button
-              size="sm"
-              onClick={() => setIsAddingItem(!isAddingItem)}
-              className="h-7 text-xs px-3"
-            >
-              + Idée
-            </Button>
+
+            <div className="flex items-center gap-2">
+              {confirmDeleteListId === currentList.id ? (
+                <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-md">
+                  <span className="text-[11px] text-zinc-400">Supprimer la liste ?</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteList(currentList.id)}
+                    className="text-[11px] text-rose-400 hover:text-rose-300 font-medium cursor-pointer"
+                  >
+                    Oui
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteListId(null)}
+                    className="text-[11px] text-zinc-500 hover:text-zinc-300 cursor-pointer ml-1"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteListId(currentList.id)}
+                  className="text-zinc-500 hover:text-rose-400 text-[11px] cursor-pointer"
+                  title="Supprimer cette liste"
+                >
+                  Supprimer la liste
+                </button>
+              )}
+
+              <Button
+                size="sm"
+                onClick={() => setIsAddingItem(!isAddingItem)}
+                className="h-7 text-xs px-3"
+              >
+                + Idée
+              </Button>
+            </div>
           </div>
 
           {/* Formulaire ajout cadeau avec photo */}
