@@ -2,7 +2,7 @@ import type { Couple, Profile, List, ListItem } from '../types';
 
 export const initialCouple: Couple = {
   id: 'couple-ping-01',
-  name: 'Notre Espace 🌿',
+  name: 'Notre Espace',
   invite_code: 'DUO-742',
   created_at: new Date().toISOString(),
 };
@@ -12,13 +12,13 @@ export const initialProfiles: Profile[] = [
     id: 'user-1',
     couple_id: 'couple-ping-01',
     display_name: 'Alex',
-    avatar_color: '#71717a', // Zinc élégant neutre
+    avatar_color: '#71717a',
   },
   {
     id: 'user-2',
     couple_id: 'couple-ping-01',
     display_name: 'Sam',
-    avatar_color: '#a1a1aa', // Zinc clair neutre
+    avatar_color: '#a1a1aa',
   },
 ];
 
@@ -27,52 +27,52 @@ export const initialLists: List[] = [
     id: 'list-groceries',
     couple_id: 'couple-ping-01',
     created_by: 'user-1',
-    title: 'Courses de la semaine',
+    title: 'Courses',
     type: 'groceries',
     visibility: 'shared',
     icon: 'ShoppingCart',
-    color: '#10b981',
+    color: '#71717a',
     created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
   },
   {
     id: 'list-todo',
     couple_id: 'couple-ping-01',
     created_by: 'user-2',
-    title: 'To-Do Partagée',
+    title: 'Tâches',
     type: 'todo',
     visibility: 'shared',
     icon: 'CheckSquare',
-    color: '#6366f1',
+    color: '#71717a',
     created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
   },
   {
     id: 'list-gifts-for-sam',
     couple_id: 'couple-ping-01',
-    created_by: 'user-1', // Créé par Alex pour Sam -> SEUL Alex le voit !
-    title: 'Surprises pour Sam',
+    created_by: 'user-1',
+    title: 'Pour Sam',
     type: 'gifts',
     visibility: 'secret',
     target_user_id: 'user-2',
     icon: 'Gift',
-    color: '#e11d48',
+    color: '#71717a',
     created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
   },
   {
     id: 'list-gifts-for-alex',
     couple_id: 'couple-ping-01',
-    created_by: 'user-2', // Créé par Sam pour Alex -> SEUL Sam le voit !
-    title: 'Surprises pour Alex',
+    created_by: 'user-2',
+    title: 'Pour Alex',
     type: 'gifts',
     visibility: 'secret',
     target_user_id: 'user-1',
-    icon: 'Sparkles',
-    color: '#d946ef',
+    icon: 'Gift',
+    color: '#71717a',
     created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
   },
 ];
 
 export const initialItems: ListItem[] = [
-  // Items Courses
+  // Courses
   {
     id: 'item-g-1',
     list_id: 'list-groceries',
@@ -85,7 +85,7 @@ export const initialItems: ListItem[] = [
   {
     id: 'item-g-2',
     list_id: 'list-groceries',
-    title: 'Parmesan 24 mois',
+    title: 'Parmesan',
     category: 'Frais & Crémerie',
     is_completed: false,
     created_by: 'user-2',
@@ -94,7 +94,7 @@ export const initialItems: ListItem[] = [
   {
     id: 'item-g-3',
     list_id: 'list-groceries',
-    title: 'Café en grains',
+    title: 'Café grains',
     category: 'Épicerie',
     is_completed: true,
     completed_by: 'user-1',
@@ -105,19 +105,19 @@ export const initialItems: ListItem[] = [
   {
     id: 'item-g-4',
     list_id: 'list-groceries',
-    title: 'Pain complet',
+    title: 'Pain',
     category: 'Boulangerie',
     is_completed: false,
     created_by: 'user-2',
     created_at: new Date().toISOString(),
   },
 
-  // Items To-Do
+  // Tâches
   {
     id: 'item-t-1',
     list_id: 'list-todo',
-    title: 'Réserver le restaurant pour samedi soir',
-    details: 'Vérifier s\'il reste de la place en terrasse',
+    title: 'Réservation train',
+    details: 'Vendredi soir',
     is_completed: false,
     created_by: 'user-2',
     created_at: new Date().toISOString(),
@@ -125,32 +125,23 @@ export const initialItems: ListItem[] = [
   {
     id: 'item-t-2',
     list_id: 'list-todo',
-    title: 'Prendre les billets de train pour le week-end',
-    details: 'Départ vendredi 18h',
+    title: 'Restaurant samedi',
     is_completed: true,
     completed_by: 'user-1',
     completed_at: new Date().toISOString(),
     created_by: 'user-1',
     created_at: new Date().toISOString(),
   },
-  {
-    id: 'item-t-3',
-    list_id: 'list-todo',
-    title: 'Rempoter les plantes du salon',
-    is_completed: false,
-    created_by: 'user-1',
-    created_at: new Date().toISOString(),
-  },
 
-  // Items Cadeaux Alex -> Sam (Secret)
+  // Cadeaux
   {
     id: 'item-gift-sam-1',
     list_id: 'list-gifts-for-sam',
-    title: 'Week-end détente au calme',
-    details: 'Maison d\'hôtes avec vue nature',
-    price_estimate: 240,
+    title: 'Livre photo',
+    details: 'Édition reliée',
+    price_estimate: 45,
     status: 'ordered',
-    url: 'https://example.com/weekend',
+    url: 'https://example.com/item',
     is_completed: false,
     created_by: 'user-1',
     created_at: new Date().toISOString(),
@@ -158,26 +149,11 @@ export const initialItems: ListItem[] = [
   {
     id: 'item-gift-sam-2',
     list_id: 'list-gifts-for-sam',
-    title: 'Livre de photographie d\'art',
-    details: 'Édition reliée grand format',
-    price_estimate: 55,
+    title: 'Casque audio',
+    price_estimate: 180,
     status: 'pending',
     is_completed: false,
     created_by: 'user-1',
-    created_at: new Date().toISOString(),
-  },
-
-  // Items Cadeaux Sam -> Alex (Secret)
-  {
-    id: 'item-gift-alex-1',
-    list_id: 'list-gifts-for-alex',
-    title: 'Casque audio sans fil haute fidélité',
-    details: 'Finition noir mat',
-    price_estimate: 290,
-    status: 'pending',
-    url: 'https://example.com/audio',
-    is_completed: false,
-    created_by: 'user-2',
     created_at: new Date().toISOString(),
   },
 ];

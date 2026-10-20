@@ -1,36 +1,23 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import type { GiftStatus } from '../types';
-import { 
-  Gift, 
-  Lock, 
-  Plus, 
-  ExternalLink, 
-  Trash2, 
-  Clock, 
-  Package, 
-  ShoppingBag,
-  CheckCircle2,
-  Euro
-} from 'lucide-react';
+import { Lock, ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 import { cn } from './ui/button';
 
-const STATUS_LABELS: Record<GiftStatus, { label: string; icon: any }> = {
-  pending: { label: 'Idée', icon: Clock },
-  ordered: { label: 'Commandé', icon: ShoppingBag },
-  received: { label: 'Reçu', icon: Package },
-  wrapped: { label: 'Prêt', icon: CheckCircle2 },
+const STATUS_LABELS: Record<GiftStatus, string> = {
+  pending: 'Idée',
+  ordered: 'Commandé',
+  received: 'Reçu',
+  wrapped: 'Prêt',
 };
 
 export const GiftsView: React.FC = () => {
   const {
     getVisibleLists,
     getItemsForList,
-    getCurrentProfile,
     getPartnerProfile,
     createList,
     addItem,
@@ -38,15 +25,12 @@ export const GiftsView: React.FC = () => {
     updateGiftStatus,
   } = useAppStore();
 
-  const currentProfile = getCurrentProfile();
   const partnerProfile = getPartnerProfile();
 
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
-
   const [activeGiftListId, setActiveGiftListId] = useState<string | null>(null);
 
-  // Formulaire d'ajout
   const [giftTitle, setGiftTitle] = useState('');
   const [giftDetails, setGiftDetails] = useState('');
   const [giftPrice, setGiftPrice] = useState('');
@@ -101,36 +85,22 @@ export const GiftsView: React.FC = () => {
   );
 
   return (
-    <div className="pb-safe-nav pt-4 px-4 max-w-md mx-auto space-y-4">
-      {/* En-tête épuré */}
+    <div className="pb-safe-nav pt-4 px-4 max-w-md mx-auto space-y-3">
+      {/* En-tête sobre */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-            <Gift className="size-4 text-zinc-400" />
-            Coffre Secret
-          </h1>
-          <p className="text-xs text-zinc-400">
-            Idées cadeaux strictement privées
-          </p>
-        </div>
-
-        <Badge variant="secret" className="gap-1">
-          <Lock className="size-3" />
-          <span>Privé</span>
-        </Badge>
+        <h1 className="text-sm font-semibold tracking-tight text-zinc-100 flex items-center gap-1.5">
+          <Lock className="size-3.5 text-zinc-400" />
+          Secrets
+        </h1>
+        {totalBudget > 0 && (
+          <span className="text-xs text-zinc-500 font-medium">
+            Total : {totalBudget} €
+          </span>
+        )}
       </div>
 
-      {/* Note discrète de confidentialité */}
-      <div className="p-3 rounded-lg border border-zinc-800 bg-zinc-900/30 text-xs text-zinc-400 flex items-start gap-2.5">
-        <Lock className="size-3.5 text-zinc-500 mt-0.5 shrink-0" />
-        <p className="leading-relaxed text-[11px]">
-          Ce coffre est visible uniquement depuis votre profil ({currentProfile.display_name}). 
-          {partnerProfile && ` ${partnerProfile.display_name} n'y a pas accès.`}
-        </p>
-      </div>
-
-      {/* Onglets des listes secrètes */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+      {/* Onglets de listes */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar border-b border-zinc-800/60 pb-1.5">
         {secretLists.map((list) => {
           const isActive = currentList?.id === list.id;
           return (
@@ -138,116 +108,93 @@ export const GiftsView: React.FC = () => {
               key={list.id}
               onClick={() => setActiveGiftListId(list.id)}
               className={cn(
-                'text-xs font-medium px-3 py-1.5 rounded-md shrink-0 transition-colors cursor-pointer flex items-center gap-1.5',
+                'text-xs px-2.5 py-1 rounded transition-colors cursor-pointer',
                 isActive
-                  ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
-                  : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
+                  ? 'bg-zinc-800 text-zinc-100 font-medium border border-zinc-700'
+                  : 'text-zinc-500 hover:text-zinc-300'
               )}
             >
-              <Lock className="size-3 text-zinc-500" />
-              <span>{list.title}</span>
+              {list.title}
             </button>
           );
         })}
 
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={() => setIsAddingList(!isAddingList)}
-          className="h-7 text-[11px] gap-1"
+          className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1 cursor-pointer"
         >
-          <Plus className="size-3" />
-          <span>Nouvelle liste</span>
-        </Button>
+          + Liste
+        </button>
       </div>
 
-      {/* Modal création de liste */}
+      {/* Ajout liste */}
       {isAddingList && (
-        <Card className="border-zinc-800 bg-zinc-900/60">
-          <CardContent className="p-3 space-y-2">
-            <p className="text-xs font-medium text-zinc-200">Créer une liste secrète</p>
-            <form onSubmit={handleCreateList} className="flex gap-2">
-              <Input
-                type="text"
-                value={newListTitle}
-                onChange={(e) => setNewListTitle(e.target.value)}
-                placeholder="Ex: Noël, Anniversaire..."
-                className="h-8"
-              />
-              <Button type="submit" size="sm" disabled={!newListTitle.trim()}>
-                Créer
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <form onSubmit={handleCreateList} className="flex gap-2">
+          <Input
+            type="text"
+            value={newListTitle}
+            onChange={(e) => setNewListTitle(e.target.value)}
+            placeholder="Nom de la liste..."
+            className="h-8 text-xs"
+          />
+          <Button type="submit" size="sm" disabled={!newListTitle.trim()}>
+            Créer
+          </Button>
+        </form>
       )}
 
       {currentList ? (
-        <div className="space-y-3">
-          {/* Barre résumé */}
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>
-              {currentItems.length} idée{currentItems.length > 1 ? 's' : ''}
-              {totalBudget > 0 && ` • Budget : ${totalBudget} €`}
-            </span>
-
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-xs text-zinc-500">
+            <span>{currentItems.length} article{currentItems.length > 1 ? 's' : ''}</span>
             <Button
               size="sm"
               onClick={() => setIsAddingItem(!isAddingItem)}
-              className="h-7 gap-1"
+              className="h-6 text-[11px] px-2.5"
             >
-              <Plus className="size-3.5" />
-              <span>Ajouter une idée</span>
+              + Idée
             </Button>
           </div>
 
           {/* Formulaire ajout cadeau */}
           {isAddingItem && (
-            <Card className="border-zinc-800 bg-zinc-900/60">
+            <Card className="border-zinc-800 bg-zinc-900/50">
               <CardContent className="p-3 space-y-2">
                 <Input
                   type="text"
                   value={giftTitle}
                   onChange={(e) => setGiftTitle(e.target.value)}
-                  placeholder="Nom du cadeau..."
-                  className="h-8"
+                  placeholder="Article..."
+                  className="h-8 text-xs"
                 />
                 <Input
                   type="text"
                   value={giftDetails}
                   onChange={(e) => setGiftDetails(e.target.value)}
                   placeholder="Détails (taille, couleur)..."
-                  className="h-8"
+                  className="h-7 text-[11px]"
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={giftPrice}
-                      onChange={(e) => setGiftPrice(e.target.value)}
-                      placeholder="Prix (€)"
-                      className="h-8 pl-7"
-                    />
-                    <Euro className="size-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
-                  </div>
+                  <Input
+                    type="number"
+                    value={giftPrice}
+                    onChange={(e) => setGiftPrice(e.target.value)}
+                    placeholder="Prix (€)"
+                    className="h-7 text-[11px]"
+                  />
                   <Input
                     type="url"
                     value={giftUrl}
                     onChange={(e) => setGiftUrl(e.target.value)}
-                    placeholder="Lien web..."
-                    className="h-8"
+                    placeholder="Lien..."
+                    className="h-7 text-[11px]"
                   />
                 </div>
-                <div className="flex justify-end gap-2 pt-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() => setIsAddingItem(false)}
-                  >
+                <div className="flex justify-end gap-1.5 pt-1">
+                  <Button variant="ghost" size="sm" onClick={() => setIsAddingItem(false)} className="h-6 text-[11px]">
                     Annuler
                   </Button>
-                  <Button size="sm" type="button" onClick={handleAddGift} disabled={!giftTitle.trim()}>
+                  <Button size="sm" onClick={handleAddGift} disabled={!giftTitle.trim()} className="h-6 text-[11px]">
                     Enregistrer
                   </Button>
                 </div>
@@ -255,99 +202,86 @@ export const GiftsView: React.FC = () => {
             </Card>
           )}
 
-          {/* Cartes cadeaux sobres */}
-          <div className="space-y-2">
+          {/* Liste */}
+          <div className="space-y-1.5">
             {currentItems.length === 0 ? (
-              <div className="text-center py-8 text-zinc-400 text-xs">
-                Aucune idée enregistrée pour le moment.
+              <div className="text-center py-6 text-zinc-500 text-xs">
+                Aucune idée enregistrée
               </div>
             ) : (
               currentItems.map((item) => {
                 const currentStatus = item.status || 'pending';
 
                 return (
-                  <Card key={item.id} className="border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 transition-colors">
-                    <CardContent className="p-3 space-y-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-xs font-medium text-zinc-200 leading-snug">
-                            {item.title}
-                          </h3>
-                          {item.details && (
-                            <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
-                              {item.details}
-                            </p>
-                          )}
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteItem(item.id)}
-                          className="size-6 text-zinc-400 hover:text-rose-400 shrink-0"
-                        >
-                          <Trash2 className="size-3" />
-                        </Button>
+                  <div
+                    key={item.id}
+                    className="p-2.5 rounded border border-zinc-850 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-medium text-zinc-200 block truncate">
+                          {item.title}
+                        </span>
+                        {item.details && (
+                          <span className="text-[11px] text-zinc-500 block mt-0.5">
+                            {item.details}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs">
-                        {item.price_estimate && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {item.price_estimate} €
-                          </Badge>
-                        )}
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="text-zinc-600 hover:text-zinc-400 p-0.5 cursor-pointer"
+                      >
+                        <Trash2 className="size-3" />
+                      </button>
+                    </div>
 
+                    <div className="flex items-center justify-between pt-1 border-t border-zinc-900 text-xs">
+                      <div className="flex items-center gap-2">
+                        {item.price_estimate && (
+                          <span className="text-[11px] text-zinc-400 font-medium">
+                            {item.price_estimate} €
+                          </span>
+                        )}
                         {item.url && (
                           <a
                             href={item.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors"
+                            className="text-[11px] text-zinc-500 hover:text-zinc-300 inline-flex items-center gap-1"
                           >
-                            <ExternalLink className="size-3" />
-                            <span>Voir le produit</span>
+                            <ExternalLink className="size-2.5" /> Lien
                           </a>
                         )}
                       </div>
 
-                      {/* Statuts façon segmented control */}
-                      <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between">
-                        <span className="text-[10px] text-zinc-400">Statut :</span>
-
-                        <div className="flex items-center gap-1">
-                          {(['pending', 'ordered', 'received', 'wrapped'] as GiftStatus[]).map((st) => {
-                            const isCurrent = currentStatus === st;
-                            const config = STATUS_LABELS[st];
-                            const StIcon = config.icon;
-
-                            return (
-                              <button
-                                key={st}
-                                onClick={() => updateGiftStatus(item.id, st)}
-                                className={cn(
-                                  'text-[10px] font-medium px-2 py-0.5 rounded transition-colors flex items-center gap-1 cursor-pointer',
-                                  isCurrent
-                                    ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
-                                    : 'text-zinc-400 hover:text-zinc-300'
-                                )}
-                              >
-                                <StIcon className="size-2.5" />
-                                <span>{config.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
+                      <div className="flex items-center gap-0.5">
+                        {(['pending', 'ordered', 'received', 'wrapped'] as GiftStatus[]).map((st) => (
+                          <button
+                            key={st}
+                            onClick={() => updateGiftStatus(item.id, st)}
+                            className={cn(
+                              'text-[10px] px-1.5 py-0.2 rounded transition-colors cursor-pointer',
+                              currentStatus === st
+                                ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
+                                : 'text-zinc-600 hover:text-zinc-400'
+                            )}
+                          >
+                            {STATUS_LABELS[st]}
+                          </button>
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 );
               })
             )}
           </div>
         </div>
       ) : (
-        <div className="text-center py-8 text-zinc-400 text-xs">
-          Aucune liste secrète active.
+        <div className="text-center py-6 text-zinc-500 text-xs">
+          Aucune liste
         </div>
       )}
     </div>

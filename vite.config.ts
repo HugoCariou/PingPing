@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
-        name: 'PingPing - Espace Couple',
+        name: 'PingPing',
         short_name: 'PingPing',
-        description: 'Application partagée pour couple avec listes communes et coffre à cadeaux secret anti-spoil.',
+        description: 'Espace partagé et listes secrètes.',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',

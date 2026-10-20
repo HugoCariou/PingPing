@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import confetti from 'canvas-confetti';
 import type { 
   Couple, 
   Profile, 
@@ -163,21 +162,6 @@ export const useAppStore = create<AppState>()(
               : item
           ),
         }));
-
-        // Petite pluie de confettis joyeux si on coche un élément
-        if (nextCompleted) {
-          try {
-            confetti({
-              particleCount: 25,
-              spread: 60,
-              origin: { y: 0.85 },
-              colors: ['#ec4899', '#f43f5e', '#a855f7', '#10b981'],
-              disableForReducedMotion: true,
-            });
-          } catch {
-            // Pas d'erreur si confetti non dispo
-          }
-        }
       },
 
       deleteItem: (itemId) =>
