@@ -19,14 +19,22 @@ export const GiftsView: React.FC = () => {
   const {
     getVisibleLists,
     getItemsForList,
+    getCurrentProfile,
     getPartnerProfile,
     createList,
     addItem,
     deleteItem,
     updateGiftStatus,
+    isSecretUnlocked,
+    unlockSecrets,
+    lockSecrets,
   } = useAppStore();
 
+  const currentProfile = getCurrentProfile();
   const partnerProfile = getPartnerProfile();
+
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pinError, setPinError] = useState(false);
 
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
@@ -48,6 +56,18 @@ export const GiftsView: React.FC = () => {
 
   const currentList = secretLists.find((l) => l.id === activeGiftListId) || secretLists[0];
   const currentItems = currentList ? getItemsForList(currentList.id) : [];
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = unlockSecrets(enteredPin);
+    if (!success) {
+      setPinError(true);
+      setEnteredPin('');
+    } else {
+      setPinError(false);
+      setEnteredPin('');
+    }
+  };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,18 +123,75 @@ export const GiftsView: React.FC = () => {
     0
   );
 
+  // Si le profil a un PIN et n'est pas encore déverrouillé sur cet appareil
+  if (currentProfile.pin && !isSecretUnlocked) {
+    return (
+      <div className="pb-safe-nav pt-12 px-4 max-w-xs mx-auto text-center space-y-4">
+        <div className="size-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-300">
+          <Lock className="size-5" />
+        </div>
+
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-100">
+            Coffre Secret
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1">
+            Code PIN requis pour {currentProfile.display_name}
+          </p>
+        </div>
+
+        <form onSubmit={handleUnlock} className="space-y-3 pt-2">
+          <Input
+            type="password"
+            maxLength={6}
+            value={enteredPin}
+            onChange={(e) => {
+              setEnteredPin(e.target.value);
+              setPinError(false);
+            }}
+            placeholder="Code PIN..."
+            className="h-10 text-center tracking-widest text-base"
+            autoFocus
+          />
+
+          {pinError && (
+            <p className="text-xs text-rose-400">Code PIN incorrect</p>
+          )}
+
+          <Button type="submit" disabled={!enteredPin.trim()} className="w-full h-9">
+            Déverrouiller
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-safe-nav pt-5 px-4 max-w-md mx-auto space-y-4">
-      {/* En-tête */}
+      {/* En-tête avec bouton de verrouillage */}
       <div className="flex items-center justify-between">
-        <h1 className="text-base font-semibold tracking-tight text-zinc-100 flex items-center gap-1.5">
-          <Lock className="size-4 text-zinc-400" />
-          Secrets
-        </h1>
-        {totalBudget > 0 && (
-          <span className="text-xs text-zinc-400 font-medium">
-            Total : {totalBudget} €
-          </span>
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-semibold tracking-tight text-zinc-100 flex items-center gap-1.5">
+            <Lock className="size-4 text-zinc-400" />
+            Secrets
+          </h1>
+          {totalBudget > 0 && (
+            <span className="text-xs text-zinc-400 font-medium">
+              • {totalBudget} €
+            </span>
+          )}
+        </div>
+
+        {currentProfile.pin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={lockSecrets}
+            className="h-7 text-xs text-zinc-400 hover:text-zinc-200 gap-1"
+          >
+            <Lock className="size-3" />
+            <span>Verrouiller</span>
+          </Button>
         )}
       </div>
 
@@ -283,7 +360,6 @@ export const GiftsView: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Miniature photo si présente */}
                       {item.image_url && (
                         <button
                           type="button"
@@ -321,7 +397,6 @@ export const GiftsView: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Micro-statuts */}
                       <div className="flex items-center gap-1">
                         {(['pending', 'ordered', 'received', 'wrapped'] as GiftStatus[]).map((st) => (
                           <button

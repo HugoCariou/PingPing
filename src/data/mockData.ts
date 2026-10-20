@@ -13,12 +13,14 @@ export const initialProfiles: Profile[] = [
     couple_id: 'couple-ping-01',
     display_name: 'Alex',
     avatar_color: '#71717a',
+    pin: undefined,
   },
   {
     id: 'user-2',
     couple_id: 'couple-ping-01',
     display_name: 'Sam',
     avatar_color: '#a1a1aa',
+    pin: undefined,
   },
 ];
 

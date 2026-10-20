@@ -34,6 +34,11 @@ interface AppState {
   setSelectedGroceryCategory: (cat: GroceryCategory | 'Toutes') => void;
   updateCoupleName: (name: string) => void;
   updateProfileName: (userId: string, newName: string) => void;
+  setProfilePin: (userId: string, pin: string) => void;
+  isSecretUnlocked: boolean;
+  unlockSecrets: (pin: string) => boolean;
+  lockSecrets: () => void;
+  switchUserWithPin: (targetUserId: string, pinInput?: string) => boolean;
 
   // Actions Listes
   createList: (params: {
@@ -80,10 +85,44 @@ export const useAppStore = create<AppState>()(
       items: initialItems,
       activeTab: 'groceries',
       selectedGroceryCategory: 'Toutes',
+      isSecretUnlocked: false,
 
-      setCurrentUser: (userId) => set({ currentUserId: userId }),
+      setCurrentUser: (userId) => set({ currentUserId: userId, isSecretUnlocked: false }),
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSelectedGroceryCategory: (cat) => set({ selectedGroceryCategory: cat }),
+
+      setProfilePin: (userId, pin) =>
+        set((state) => ({
+          profiles: state.profiles.map((p) =>
+            p.id === userId ? { ...p, pin: pin.trim() } : p
+          ),
+        })),
+
+      unlockSecrets: (pin) => {
+        const { profiles, currentUserId } = get();
+        const profile = profiles.find((p) => p.id === currentUserId);
+        if (!profile?.pin || profile.pin === pin.trim()) {
+          set({ isSecretUnlocked: true });
+          return true;
+        }
+        return false;
+      },
+
+      lockSecrets: () => set({ isSecretUnlocked: false }),
+
+      switchUserWithPin: (targetUserId, pinInput) => {
+        const { profiles } = get();
+        const target = profiles.find((p) => p.id === targetUserId);
+        if (!target) return false;
+
+        // Si le profil cible a un code PIN, il faut obligatoirement le bon code
+        if (target.pin && target.pin !== pinInput?.trim()) {
+          return false;
+        }
+
+        set({ currentUserId: targetUserId, isSecretUnlocked: false });
+        return true;
+      },
 
       updateCoupleName: (name) =>
         set((state) => ({

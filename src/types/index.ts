@@ -25,6 +25,7 @@ export interface Profile {
   couple_id: string | null;
   display_name: string;
   avatar_color: string;
+  pin?: string;
   created_at?: string;
 }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { requestNotificationPermission, sendNotification } from '../lib/notifications';
-import { Copy, Check, Share2, Bell } from 'lucide-react';
+import { Copy, Check, Share2, Bell, Lock, KeyRound } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -12,15 +12,28 @@ export const SettingsView: React.FC = () => {
   const {
     couple,
     profiles,
-    updateCoupleName,
-    updateProfileName,
     currentUserId,
+    updateCoupleName,
+    setProfilePin,
+    switchUserWithPin,
   } = useAppStore();
+
+  const currentProfile = profiles.find((p) => p.id === currentUserId) || profiles[0];
 
   const [copied, setCopied] = useState(false);
   const [editingCoupleName, setEditingCoupleName] = useState(false);
   const [coupleNameInput, setCoupleNameInput] = useState(couple.name);
   const [notifGranted, setNotifGranted] = useState(false);
+
+  // Gestion du PIN
+  const [editingPin, setEditingPin] = useState(false);
+  const [pinInput, setPinInput] = useState(currentProfile.pin || '');
+  const [pinSaved, setPinSaved] = useState(false);
+
+  // Changement de compte sécurisé
+  const [switchingToId, setSwitchingToId] = useState<string | null>(null);
+  const [switchPinInput, setSwitchPinInput] = useState('');
+  const [switchError, setSwitchError] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -32,7 +45,7 @@ export const SettingsView: React.FC = () => {
     const granted = await requestNotificationPermission();
     setNotifGranted(granted);
     if (granted) {
-      sendNotification('PingPing', 'Notifications activées pour le foyer');
+      sendNotification('PingPing', 'Notifications activées');
     }
   };
 
@@ -61,9 +74,44 @@ export const SettingsView: React.FC = () => {
     setEditingCoupleName(false);
   };
 
+  const handleSavePin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfilePin(currentProfile.id, pinInput.trim());
+    setEditingPin(false);
+    setPinSaved(true);
+    setTimeout(() => setPinSaved(false), 2000);
+  };
+
+  const handleSwitchUser = (targetId: string) => {
+    const target = profiles.find((p) => p.id === targetId);
+    if (!target?.pin) {
+      // Si la cible n'a pas de PIN, bascule directe
+      switchUserWithPin(targetId);
+      setSwitchingToId(null);
+    } else {
+      // Demande de PIN obligatoire
+      setSwitchingToId(targetId);
+      setSwitchPinInput('');
+      setSwitchError(false);
+    }
+  };
+
+  const handleConfirmSwitch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!switchingToId) return;
+
+    const success = switchUserWithPin(switchingToId, switchPinInput);
+    if (success) {
+      setSwitchingToId(null);
+      setSwitchPinInput('');
+      setSwitchError(false);
+    } else {
+      setSwitchError(true);
+    }
+  };
+
   return (
     <div className="pb-safe-nav pt-5 px-4 max-w-md mx-auto space-y-4 text-xs">
-      {/* En-tête sobre */}
       <h1 className="text-base font-semibold tracking-tight text-zinc-100">
         Réglages
       </h1>
@@ -117,41 +165,131 @@ export const SettingsView: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Profils */}
+      {/* Mon Profil & Code PIN personnel */}
       <Card className="border-zinc-800 bg-zinc-900/30">
-        <CardContent className="p-3.5 space-y-2">
-          <span className="text-xs text-zinc-400 font-medium block mb-1">Profils</span>
-          {profiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50"
-            >
-              <div className="flex items-center gap-2.5">
-                <span
-                  className="size-2 rounded-full"
-                  style={{ backgroundColor: profile.avatar_color }}
-                />
-                <span className="text-zinc-200 font-medium">{profile.display_name}</span>
-                {profile.id === currentUserId && (
-                  <span className="text-[11px] text-zinc-400">(actif)</span>
-                )}
+        <CardContent className="p-3.5 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-400 font-medium">Mon compte</span>
+            <span className="text-zinc-200 font-medium">{currentProfile.display_name}</span>
+          </div>
+
+          <div className="pt-2 border-t border-zinc-850">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Lock className="size-3 text-zinc-400" />
+                <span className="text-zinc-300">Code PIN secret</span>
               </div>
 
-              <button
-                onClick={() => {
-                  const newName = prompt('Nom :', profile.display_name);
-                  if (newName && newName.trim()) {
-                    updateProfileName(profile.id, newName.trim());
-                  }
-                }}
-                className="text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer"
-              >
-                Renommer
-              </button>
+              {editingPin ? (
+                <form onSubmit={handleSavePin} className="flex items-center gap-1.5">
+                  <Input
+                    type="password"
+                    maxLength={6}
+                    value={pinInput}
+                    onChange={(e) => setPinInput(e.target.value)}
+                    placeholder="PIN..."
+                    className="h-6 w-20 text-xs text-center"
+                    autoFocus
+                  />
+                  <Button type="submit" size="sm" className="h-6 text-[10px] px-2">
+                    OK
+                  </Button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => {
+                    setPinInput(currentProfile.pin || '');
+                    setEditingPin(true);
+                  }}
+                  className="text-zinc-400 hover:text-zinc-200 text-[11px] cursor-pointer"
+                >
+                  {pinSaved ? 'Enregistré' : currentProfile.pin ? 'Modifier le PIN' : 'Définir un PIN'}
+                </button>
+              )}
             </div>
-          ))}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Profils du foyer & Bascule sécurisée */}
+      <Card className="border-zinc-800 bg-zinc-900/30">
+        <CardContent className="p-3.5 space-y-2">
+          <span className="text-xs text-zinc-400 font-medium block mb-1">Appareils du foyer</span>
+          {profiles.map((profile) => {
+            const isMe = profile.id === currentUserId;
+            return (
+              <div
+                key={profile.id}
+                className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-zinc-900/50"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: profile.avatar_color }}
+                  />
+                  <span className="text-zinc-200 font-medium">{profile.display_name}</span>
+                  {isMe && <span className="text-[11px] text-zinc-400">(cet appareil)</span>}
+                </div>
+
+                {!isMe && (
+                  <button
+                    onClick={() => handleSwitchUser(profile.id)}
+                    className="text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                  >
+                    Changer pour ce compte
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {/* Modale de confirmation PIN pour changer de compte */}
+      {switchingToId && (
+        <Card className="border-zinc-800 bg-zinc-900/90 shadow-xl">
+          <CardContent className="p-3.5 space-y-2.5">
+            <div className="flex items-center gap-2 text-zinc-200 font-medium">
+              <KeyRound className="size-4 text-zinc-400" />
+              <span>Code PIN requis pour ce compte</span>
+            </div>
+
+            <form onSubmit={handleConfirmSwitch} className="space-y-2">
+              <Input
+                type="password"
+                maxLength={6}
+                value={switchPinInput}
+                onChange={(e) => {
+                  setSwitchPinInput(e.target.value);
+                  setSwitchError(false);
+                }}
+                placeholder="Entrer le code PIN..."
+                className="h-8 text-xs text-center tracking-widest"
+                autoFocus
+              />
+
+              {switchError && (
+                <p className="text-[11px] text-rose-400 text-center">Code PIN incorrect</p>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={() => setSwitchingToId(null)}
+                  className="h-7 text-xs"
+                >
+                  Annuler
+                </Button>
+                <Button size="sm" type="submit" disabled={!switchPinInput.trim()} className="h-7 text-xs">
+                  Valider
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Notifications */}
       <Card className="border-zinc-800 bg-zinc-900/30">
