@@ -19,7 +19,7 @@ export const Navbar: React.FC = () => {
           </span>
           <span className="text-zinc-600">/</span>
           <span className="text-xs text-zinc-400 truncate max-w-[120px]">
-            {couple.name}
+            {couple.name.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27BF]/g, '').trim()}
           </span>
         </div>
 

@@ -84,7 +84,10 @@ export const useAppStore = create<AppState>()(
 
       updateCoupleName: (name) =>
         set((state) => ({
-          couple: { ...state.couple, name },
+          couple: { 
+            ...state.couple, 
+            name: name.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27BF]/g, '').trim() 
+          },
         })),
 
       updateProfileName: (userId, newName) =>
@@ -219,7 +222,7 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'pingping-couple-storage-v2',
+      name: 'pingping-storage-v3',
     }
   )
 );

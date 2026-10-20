@@ -74,7 +74,7 @@ export const SettingsView: React.FC = () => {
                 onClick={() => setEditingCoupleName(true)}
                 className="text-zinc-200 hover:text-white font-medium cursor-pointer"
               >
-                {couple.name}
+                {couple.name.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF\u2600-\u27BF]/g, '').trim()}
               </button>
             )}
           </div>
